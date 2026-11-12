@@ -6,27 +6,28 @@
 @inject NavigationManager Nav
 
 <div style="text-align: center; margin-top: 100px;">
-    <p>Загрузка...</p>
+    <p>Загрузка...</p> <!-- Пока проверяем данные, показываем загрузку -->
 </div>
 
 @code {
+    // Вызывается после того, как страница отрисована (чтобы был доступ к LocalStorage)
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
+        if (firstRender) // выполняем только при первой загрузке страницы
         {
-            var user = await Auth.GetCurrentUserAsync();
+            var user = await Auth.GetCurrentUserAsync(); // получаем текущего пользователя из памяти
 
-            if (user == null)
+            if (user == null) // если никто не вошел
             {
-                Nav.NavigateTo("/login");
+                Nav.NavigateTo("/login"); // кидаем на страницу входа
             }
-            else if (user.Role == "Admin")
+            else if (user.Role == "Admin") // если это администратор
             {
-                Nav.NavigateTo("/admin");
+                Nav.NavigateTo("/admin"); // открываем панель управления
             }
-            else
+            else // если это обычный пользователь
             {
-                Nav.NavigateTo("/user/bookings"); // Сюда будем делать экран пользователя
+                Nav.NavigateTo("/user/bookings"); // открываем его бронирования
             }
         }
     }

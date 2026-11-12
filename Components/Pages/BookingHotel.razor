@@ -8,39 +8,35 @@
 @inject NavigationManager Nav
 @inject IDbContextFactory<AppDbContext> ContextFactory
 
-<!-- Кнопка выхода справа -->
 <div style="display: flex; justify-content: flex-end; padding: 10px 20px;">
     <button @onclick="Logout" style="padding: 5px 15px;">Выйти</button>
 </div>
 
-<!-- Контент по центру -->
 <div style="text-align: center; padding: 10px;">
     <h3>Мои бронирования</h3>
 
-    @if (bookings == null) // если данные еще не загрузились
+    @if (bookings == null)
     {
         <p>Загрузка...</p>
     }
-    else if (bookings.Count == 0) // если загрузились, но список пустой
+    else if (bookings.Count == 0)
     {
         <p style="color: red;">Данных нет</p>
-        // показываем "Данных нет" (по ТЗ)
     }
-    else // если данные есть
+    else
     {
-        <!-- Блоки бронирований по центру -->
         <div style="display: flex; flex-direction: column; align-items: center; gap: 15px; margin-top: 20px;">
-            @foreach (var booking in bookings) // проходимся по каждой брони из списка
+            @foreach (var booking in bookings)
             {
                 <div style="border: 1px solid #111; padding: 15px; width: 100%; max-width: 500px; text-align: left;">
                     <div style="margin-bottom: 10px; font-weight: bold; font-size: 1.1em;">
-                        Бронь @booking.BookingNumber // номер брони
+                        Бронь @booking.BookingNumber
                     </div>
 
                     <div style="line-height: 1.6;">
-                        <div>Организация: @booking.Organization?.Name</div> // название организации
-                        <div>Контактное лицо: @booking.Contact</div> // контактное лицо
-                        <div>Дата заявки: @booking.DateRequest.ToString("dd.MM.yyyy")</div> // дата в формате день.месяц.год
+                        <div>Организация: @booking.Organization?.Name</div>
+                        <div>Контактное лицо: @booking.Contact</div>
+                        <div>Дата заявки: @booking.DateRequest.ToString("dd.MM.yyyy")</div>
                     </div>
                 </div>
             }
@@ -49,19 +45,19 @@
 </div>
 
 @code {
-    private List<Booking>? bookings; // список броней (может быть null, пока не загрузились)
+    private List<Booking>? bookings;
 
-    protected override async Task OnInitializedAsync() // вызывается при загрузке страницы
+    protected override async Task OnInitializedAsync()
     {
-        using var context = await ContextFactory.CreateDbContextAsync(); // открываем бд
+        using var context = await ContextFactory.CreateDbContextAsync();
         bookings = await context.Bookings
-            .Include(b => b.Organization) // подтягиваем данные организации
-            .ToListAsync(); // превращаем в список
+            .Include(b => b.Organization)
+            .ToListAsync();
     }
 
-    private async Task Logout() // метод для выхода
+    private async Task Logout()
     {
-        await Auth.LogoutAsync(); // удаляем юзера из памяти
-        Nav.NavigateTo("/login"); // перекидываем на страницу входа
+        await Auth.LogoutAsync();
+        Nav.NavigateTo("/login");
     }
 }
