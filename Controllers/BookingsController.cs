@@ -10,35 +10,54 @@ namespace HotelProject.Controllers
     public class BookingsController : ControllerBase
     {
         private readonly IDbContextFactory<AppDbContext> _contextFactory; // фабрика для бд
+
         public BookingsController(IDbContextFactory<AppDbContext> contextFactory)
         {
             _contextFactory = contextFactory; // сохраняем фабрику
         }
+
         // говорим сваггеру какие коды ответа бывают
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+
         // GET: api/bookings
         [HttpGet]
         public async Task<ActionResult<IEnumerable<BookingDTO>>> GetBookings([FromQuery] string? id)
         {
-            // проверяем что id это число (если он есть)
-            if (!string.IsNullOrWhiteSpace(id) && !int.TryParse(id, out _))
-                return BadRequest(new { error = "Некорректный параметр id" }); // если не число — ошибка 400
+            // если параметр id был передан
+            if (!string.IsNullOrEmpty(id))
+            {
+                // 1. убираем пробелы по краям. если после этого пусто — ошибка (это ловит %20)
+                string trimmedId = id.Trim();
+                if (string.IsNullOrEmpty(trimmedId))
+                {
+                    return BadRequest(new { error = "Некорректный параметр id" }); // отдаем 400
+                }
+
+                // 2. проверяем, что это число (если буквы — вернется false)
+                if (!int.TryParse(trimmedId, out _))
+                {
+                    return BadRequest(new { error = "Некорректный параметр id" }); // отдаем 400
+                }
+            }
+
             try
             {
                 using var context = await _contextFactory.CreateDbContextAsync(); // открываем бд
                 // берем бронирования и сразу подтягиваем организацию (название)
                 var query = context.Bookings.Include(b => b.Organization).AsQueryable();
+
                 // если id передан — ищем только его
-                if (!string.IsNullOrWhiteSpace(id))
+                if (!string.IsNullOrEmpty(id))
                 {
-                    int bookingId = int.Parse(id); // переводим в число
+                    int bookingId = int.Parse(id.Trim()); // переводим в число
                     query = query.Where(b => b.IdBooking == bookingId); // фильтруем
                 }
+
                 var bookings = await query.ToListAsync(); // получаем список из бд
-                // делаем красивый ответ (DTO)
+
+                // делаем ответ
                 var result = bookings.Select(b => new BookingDTO
                 {
                     Id = b.BookingNumber, // номер брони
@@ -46,6 +65,7 @@ namespace HotelProject.Controllers
                     Contact = b.Contact, // просто контакт
                     FormattedDate = b.DateRequest.ToString("dd.MM.yyyy") // дата в формате день.месяц.год
                 }).ToList();
+
                 return Ok(result); // отдаем 200 и список
             }
             catch (Exception)
