@@ -49,13 +49,11 @@ namespace HotelProject.Services
             await _localStorage.SetAsync("CurrentUser", user); // Сохраняем в LocalStorage
             return (user, "Вы успешно авторизовались");
         }
-
         public async Task<User?> GetCurrentUserAsync()
         {
             var result = await _localStorage.GetAsync<User>("CurrentUser");
             return result.Success ? result.Value : null;
         }
-
         public async Task LogoutAsync()
         {
             await _localStorage.DeleteAsync("CurrentUser");
@@ -66,7 +64,6 @@ namespace HotelProject.Services
             using var context = await _contextFactory.CreateDbContextAsync();
             return await context.Users.ToListAsync();
         }
-
         // Добавить нового пользователя
         public async Task<(bool success, string message)> AddUserAsync(string login, string password, string role)
         {
@@ -76,7 +73,6 @@ namespace HotelProject.Services
             {
                 return (false, "Пользователь с таким логином уже существует");
             }
-
             var user = new User
             {
                 Login = login,
@@ -85,12 +81,10 @@ namespace HotelProject.Services
                 Failed = 0,
                 IsBlocked = false
             };
-
             context.Users.Add(user);
             await context.SaveChangesAsync();
             return (true, "Пользователь успешно добавлен");
         }
-
         // Разблокировать пользователя
         public async Task UnblockUserAsync(int userId)
         {
