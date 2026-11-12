@@ -15,20 +15,23 @@
 
 <h4>Добавить нового пользователя</h4>
 
+// форма для добавления нового юзера
 <div>
-    <input @bind="newLogin" placeholder="Логин" />
-    <input @bind="newPassword" type="password" placeholder="Пароль" />
+    <input @bind="newLogin" placeholder="Логин" /> // поле для логина
+    <input @bind="newPassword" type="password" placeholder="Пароль" /> // поле для пароля
 
     <select @bind="newRole">
+        // выпадающий список для выбора роли
         <option value="User">Пользователь</option>
         <option value="Admin">Администратор</option>
     </select>
 
-    <button @onclick="AddUser">Добавить</button>
+    <button @onclick="AddUser">Добавить</button> // кнопка вызова метода добавления
 </div>
 
 <br />
 
+// таблица со всеми пользователями
 <table border="1" cellpadding="5" cellspacing="0">
     <thead>
         <tr>
@@ -40,14 +43,16 @@
         </tr>
     </thead>
     <tbody>
-        @foreach (var user in users)
+        @foreach (var user in users) // проходимся по списку всех юзеров
         {
             <tr>
                 <td>@user.IdUser</td>
                 <td>@user.Login</td>
                 <td>@user.Role</td>
+                // если заблокирован - пишем "Заблокирован", иначе "Активен"
                 <td>@(user.IsBlocked == true ? "Заблокирован" : "Активен")</td>
                 <td>
+                    // кнопка "Разблокировать" показывается только если юзер заблокирован
                     @if (user.IsBlocked == true)
                     {
                         <button @onclick="() => Unblock(user.IdUser)">Разблокировать</button>
@@ -60,43 +65,44 @@
 
 <br />
 
-<button @onclick="Logout">Выйти</button>
+<button @onclick="Logout">Выйти</button> // кнопка выхода
 
 @code {
+    // список для хранения юзеров
     private List<User> users = new();
+    // переменные для полей ввода
     private string newLogin = "";
     private string newPassword = "";
-    private string newRole = "User";
-
+    private string newRole = "User"; // по умолчанию пользователь
+    // переменные для сообщений
     private string message = "";
     private bool isError = false;
 
+    // вызывается при загрузке страницы
     protected override async Task OnInitializedAsync()
     {
-        await LoadUsers();
+        await LoadUsers(); // сразу загружаем список
     }
-
-    // 1. ЗАМЕНИЛИ Auth на Panel
+    // метод для загрузки всех пользователей из базы
     private async Task LoadUsers()
     {
-        users = await Panel.GetAllUsersAsync();
+        users = await Panel.GetAllUsersAsync(); // берем данные через сервис
     }
-
+    // метод для добавления юзера
     private async Task AddUser()
     {
+        // проверяем что поля не пустые
         if (string.IsNullOrWhiteSpace(newLogin) || string.IsNullOrWhiteSpace(newPassword))
         {
             message = "Заполните логин и пароль";
             isError = true;
             return;
         }
-
-        // 2. ЗАМЕНИЛИ Auth на Panel
+        // вызываем сервис для добавления
         var (success, msg) = await Panel.AddUserAsync(newLogin, newPassword, newRole);
-
-        message = msg;
-        isError = !success;
-
+        message = msg; // сохраняем сообщение
+        isError = !success; // если не успех - значит ошибка
+        // если все ок - очищаем поля и обновляем таблицу
         if (success)
         {
             newLogin = "";
@@ -104,21 +110,19 @@
             await LoadUsers();
         }
     }
-
+    // метод для разблокировки юзера
     private async Task Unblock(int userId)
     {
-        // 3. ЗАМЕНИЛИ Auth на Panel
-        await Panel.UnblockUserAsync(userId);
-
-        message = "Пользователь разблокирован";
+        await Panel.UnblockUserAsync(userId); // вызываем сервис
+        message = "Пользователь разблокирован"; // пишем сообщение
         isError = false;
-        await LoadUsers();
+        await LoadUsers(); // обновляем таблицу
     }
-
+    // метод для выхода
     private async Task Logout()
     {
         // Выход оставляем через Auth
-        await Auth.LogoutAsync();
-        Nav.NavigateTo("/login");
+        await Auth.LogoutAsync(); // чистим сессию
+        Nav.NavigateTo("/login"); // перекидываем на страницу входа
     }
 }
