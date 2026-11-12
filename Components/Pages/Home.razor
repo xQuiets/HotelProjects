@@ -1,0 +1,33 @@
+﻿@page "/"
+@rendermode InteractiveServer
+@using HotelProject.Services
+@using HotelProject.Models
+@inject AuthService Auth
+@inject NavigationManager Nav
+
+<div style="text-align: center; margin-top: 100px;">
+    <p>Загрузка...</p>
+</div>
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var user = await Auth.GetCurrentUserAsync();
+
+            if (user == null)
+            {
+                Nav.NavigateTo("/login");
+            }
+            else if (user.Role == "Admin")
+            {
+                Nav.NavigateTo("/admin"); // <--- Изменено под AdminPanel
+            }
+            else
+            {
+                Nav.NavigateTo("/user/bookings"); // Сюда будем делать экран пользователя
+            }
+        }
+    }
+}

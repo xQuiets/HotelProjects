@@ -1,0 +1,99 @@
+﻿@page "/admin"
+@rendermode InteractiveServer
+@using HotelProject.Services
+@using HotelProject.Models
+@inject AuthService Auth
+@inject NavigationManager Nav
+<h2>Управление пользователями</h2>
+@if (!string.IsNullOrEmpty(message))
+{
+    <p style="color: @(isError ? "red" : "green");">@message</p>
+}
+<h4>Добавить нового пользователя</h4>
+<div>
+    <input @bind="newLogin" placeholder="Логин" />
+    <input @bind="newPassword" type="password" placeholder="Пароль" />
+    <select @bind="newRole">
+        <option value="User">Пользователь</option>
+        <option value="Admin">Администратор</option>
+    </select>
+
+    <button @onclick="AddUser">Добавить</button>
+</div>
+<br />
+<table border="1" cellpadding="5" cellspacing="0">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Логин</th>
+            <th>Роль</th>
+            <th>Статус</th>
+            <th>Действие</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in users)
+        {
+            <tr>
+                <td>@user.IdUser</td>
+                <td>@user.Login</td>
+                <td>@user.Role</td>
+                <td>@(user.IsBlocked == true ? "Заблокирован" : "Активен")</td>
+                <td>
+                    @if (user.IsBlocked == true)
+                    {
+                        <button @onclick="() => Unblock(user.IdUser)">Разблокировать</button>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+<br />
+<button @onclick="Logout">Выйти</button>
+@code {
+    private List<User> users = new();
+    private string newLogin = "";
+    private string newPassword = "";
+    private string newRole = "User";
+    private string message = "";
+    private bool isError = false;
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUsers();
+    }
+    private async Task LoadUsers()
+    {
+        users = await Auth.GetAllUsersAsync();
+    }
+    private async Task AddUser()
+    {
+        if (string.IsNullOrWhiteSpace(newLogin) || string.IsNullOrWhiteSpace(newPassword))
+        {
+            message = "Заполните логин и пароль";
+            isError = true;
+            return;
+        }
+        var (success, msg) = await Auth.AddUserAsync(newLogin, newPassword, newRole);
+        message = msg;
+        isError = !success;
+        if (success)
+        {
+            newLogin = "";
+            newPassword = "";
+            await LoadUsers();
+        }
+    }
+    private async Task Unblock(int userId)
+    {
+        await Auth.UnblockUserAsync(userId);
+        message = "Пользователь разблокирован";
+        isError = false;
+        await LoadUsers();
+    }
+    private async Task Logout()
+    {
+        await Auth.LogoutAsync();
+        Nav.NavigateTo("/login");
+    }
+}

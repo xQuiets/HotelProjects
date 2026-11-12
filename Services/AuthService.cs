@@ -60,5 +60,49 @@ namespace HotelProject.Services
         {
             await _localStorage.DeleteAsync("CurrentUser");
         }
+        // Получить всех пользователей
+        public async Task<List<User>> GetAllUsersAsync()
+        {
+            using var context = await _contextFactory.CreateDbContextAsync();
+            return await context.Users.ToListAsync();
+        }
+
+        // Добавить нового пользователя
+        public async Task<(bool success, string message)> AddUserAsync(string login, string password, string role)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync();
+
+            if (await context.Users.AnyAsync(u => u.Login == login))
+            {
+                return (false, "Пользователь с таким логином уже существует");
+            }
+
+            var user = new User
+            {
+                Login = login,
+                PasswordHash = GetHash(password), // Метод GetHash уже есть в AuthService
+                Role = role,
+                Failed = 0,
+                IsBlocked = false
+            };
+
+            context.Users.Add(user);
+            await context.SaveChangesAsync();
+            return (true, "Пользователь успешно добавлен");
+        }
+
+        // Разблокировать пользователя
+        public async Task UnblockUserAsync(int userId)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync();
+            var user = await context.Users.FindAsync(userId);
+            if (user != null)
+            {
+                user.IsBlocked = false;
+                user.Failed = 0;
+                await context.SaveChangesAsync();
+            }
+        }
+
     }
 }
