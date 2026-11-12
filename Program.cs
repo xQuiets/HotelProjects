@@ -1,6 +1,12 @@
+using HotelProject.Data;
+using Microsoft.EntityFrameworkCore;
 using HotelProject.Components;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+builder.Services.AddDbContextFactory<AppDbContext>(options =>
+    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
