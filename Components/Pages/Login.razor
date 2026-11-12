@@ -12,13 +12,16 @@
     <!--вертикальный блок-->
     <div style="text-align: center; display: flex; flex-direction: column;">
         <h3>Авторизация</h3>
+
+        <!--вывод сообщений об ошибках или успехе-->
         @if (!string.IsNullOrEmpty(message))
         {
             <div style="color:@(isError ? "red" : "green"); margin-bottom: 15px; font-weight: bold;">
                 @message
             </div>
         }
-        <!--Форма-->
+
+        <!--Форма входа-->
         <EditForm Model="loginModel" OnValidSubmit="HandleLogin" FormName="LoginForm">
             <DataAnnotationsValidator />
             <p style="text-align: left;">
@@ -44,13 +47,15 @@
 </div>
 
 @code {
+    // Модель для формы (логин и пароль)
     private LoginModel loginModel = new();
 
-    private bool isCaptchaSolved = false;
-    private bool isError = true;
-    private string message = "";
-    private Captcha? captchaComponent;
+    private bool isCaptchaSolved = false; // пройдена ли капча
+    private bool isError = true; // флаг ошибки (для цвета текста)
+    private string message = ""; // текст сообщения
+    private Captcha? captchaComponent; // ссылка на компонент капчи, чтобы можно было ее сбросить
 
+    // Вызывается, когда пользователь собрал пазл
     private void OnCaptchaSolved()
     {
         isCaptchaSolved = true;
@@ -58,9 +63,13 @@
         isError = false;
         StateHasChanged();
     }
+
+    // Вызывается при нажатии на кнопку войти"
     private async Task HandleLogin()
     {
         message = null;
+
+        // Проверяем, пройдена ли капча
         if (!isCaptchaSolved)
         {
             message = "Пройдите капчу!";
@@ -68,23 +77,27 @@
             return;
         }
         var (user, error) = await Auth.AuthenticateAsync(loginModel.Login, loginModel.Password);
-        if (user == null)
+
+        if (user == null) // если неверные данные
         {
             message = error!;
             isError = true;
+
             // Сбрасываем пазл при ошибке
             isCaptchaSolved = false;
             captchaComponent?.ResetPuzzle();
             return;
         }
         isError = false;
-        Nav.NavigateTo("/");
+        Nav.NavigateTo("/"); // переходим на главную (она перекинет по роли)
     }
-    
+
+    // Класс модели с правилами проверки полей
     public class LoginModel
     {
         [Required(ErrorMessage = "Введите логин")]
         public string Login { get; set; } = "";
+
         [Required(ErrorMessage = "Введите пароль")]
         public string Password { get; set; } = "";
     }

@@ -17,29 +17,30 @@
 <div style="text-align: center; padding: 10px;">
     <h3>Мои бронирования</h3>
 
-    @if (bookings == null)
+    @if (bookings == null) // если данные еще не загрузились
     {
         <p>Загрузка...</p>
     }
-    else if (bookings.Count == 0)
+    else if (bookings.Count == 0) // если загрузились, но список пустой
     {
         <p style="color: red;">Данных нет</p>
+        // показываем "Данных нет" (по ТЗ)
     }
-    else
+    else // если данные есть
     {
         <!-- Блоки бронирований по центру -->
         <div style="display: flex; flex-direction: column; align-items: center; gap: 15px; margin-top: 20px;">
-            @foreach (var booking in bookings)
+            @foreach (var booking in bookings) // проходимся по каждой брони из списка
             {
                 <div style="border: 1px solid #111; padding: 15px; width: 100%; max-width: 500px; text-align: left;">
                     <div style="margin-bottom: 10px; font-weight: bold; font-size: 1.1em;">
-                        Бронь @booking.BookingNumber
+                        Бронь @booking.BookingNumber // номер брони
                     </div>
 
                     <div style="line-height: 1.6;">
-                        <div>Организация: @booking.Organization?.Name</div>
-                        <div>Контактное лицо: @booking.Contact</div>
-                        <div>Дата заявки: @booking.DateRequest.ToString("dd.MM.yyyy")</div>
+                        <div>Организация: @booking.Organization?.Name</div> // название организации
+                        <div>Контактное лицо: @booking.Contact</div> // контактное лицо
+                        <div>Дата заявки: @booking.DateRequest.ToString("dd.MM.yyyy")</div> // дата в формате день.месяц.год
                     </div>
                 </div>
             }
@@ -48,19 +49,19 @@
 </div>
 
 @code {
-    private List<Booking>? bookings;
+    private List<Booking>? bookings; // список броней (может быть null, пока не загрузились)
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync() // вызывается при загрузке страницы
     {
-        using var context = await ContextFactory.CreateDbContextAsync();
+        using var context = await ContextFactory.CreateDbContextAsync(); // открываем бд
         bookings = await context.Bookings
-            .Include(b => b.Organization)
-            .ToListAsync();
+            .Include(b => b.Organization) // подтягиваем данные организации
+            .ToListAsync(); // превращаем в список
     }
 
-    private async Task Logout()
+    private async Task Logout() // метод для выхода
     {
-        await Auth.LogoutAsync();
-        Nav.NavigateTo("/login");
+        await Auth.LogoutAsync(); // удаляем юзера из памяти
+        Nav.NavigateTo("/login"); // перекидываем на страницу входа
     }
 }

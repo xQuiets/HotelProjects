@@ -1,65 +1,81 @@
 ﻿@using HotelProject.Models
+
 <div style="text-align: center; margin-top: 20px;">
     <p style="font-weight: bold; margin-bottom: 20px;">Пройдите капчу</p>
-    <!--Сетка для капчи-->
+
+    <!--Сетка для капчи 2х2-->
     <div style="display: grid; grid-template-columns: 100px 100px; gap: 2px; justify-content: center;">
-        @for (int i = 0; i < 4; i++)
+        @for (int i = 0; i < 4; i++) // создаем 4 ячейки
         {
-            int index = i;
+            int index = i; // сохраняем индекс (нужно для клика)
             <div @onclick="() => Swap(index)" style="width: 100px; height: 100px; cursor: pointer;">
-                <img src="@images[index]" style="width: 100%; height: 100%;" />
+                // при клике меняем местами
+                <img src="@images[index]" style="width: 100%; height: 100%;" /> // выводим картинку
             </div>
         }
     </div>
 </div>
 
 @code {
+    // Событие, чтобы сообщить родительской странице, что пазл собран
     [Parameter] public EventCallback OnSolved { get; set; }
 
-    private string[] images = new string[4];
-    private int selectedIndex = -1;
+    private string[] images = new string[4]; // массив с путями к картинкам
+    private int selectedIndex = -1; // индекс первой выбранной картинки (для обмена)
 
+    // Вызывается при загрузке компонента
     protected override void OnInitialized()
     {
-        Shuffle();
+        Shuffle(); // перемешиваем картинки
     }
 
+    // Публичный метод для сброса пазла (вызывается из Login.razor)
     public void ResetPuzzle()
     {
-        Shuffle();
-        StateHasChanged();
+        Shuffle(); // перемешиваем заново
+        StateHasChanged(); // обновляем экран
     }
 
+    // Метод для перемешивания картинок
     private void Shuffle()
     {
         images = new[] { "images/1.png", "images/2.png", "images/3.png", "images/4.png" }
-                 .OrderBy(x => Guid.NewGuid()).ToArray();
-        selectedIndex = -1;
+                 .OrderBy(x => Guid.NewGuid()).ToArray(); // случайный порядок
+        selectedIndex = -1; // сбрасываем выбор
     }
 
+    // Метод для смены картинок местами
     private async Task Swap(int index)
     {
-        if (selectedIndex == -1)
+        if (selectedIndex == -1) // если еще ничего не выбрано
         {
-            selectedIndex = index;
+            selectedIndex = index; // запоминаем первую картинку
         }
-        else
+        else // если уже есть выбранная
         {
+            // меняем местами
             var temp = images[selectedIndex];
             images[selectedIndex] = images[index];
             images[index] = temp;
-            selectedIndex = -1;
+
+            selectedIndex = -1; // сбрасываем выбор
         }
 
-        await CheckPuzzle();
+        await CheckPuzzle(); // проверяем, собрался ли пазл
     }
 
+    // Проверка, правильно ли собраны картинки
     private async Task CheckPuzzle()
     {
-        bool isCorrect = images[0].Contains("1.png") && images[1].Contains("2.png") && images[2].Contains("3.png") && images[3].Contains("4.png");
-        if (isCorrect)
+        // Проверяем, что картинки идут по порядку (1, 2, 3, 4)
+        bool isCorrect = images[0].Contains("1.png") &&
+                         images[1].Contains("2.png") &&
+                         images[2].Contains("3.png") &&
+                         images[3].Contains("4.png");
+
+        if (isCorrect) // если собрано верно
         {
-            await OnSolved.InvokeAsync();
+            await OnSolved.InvokeAsync(); // сообщаем странице об успехе
         }
     }
 }
