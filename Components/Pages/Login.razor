@@ -47,15 +47,15 @@
 </div>
 
 @code {
-    // Модель для формы (логин и пароль)
+    //Модель для формы (логин и пароль)
     private LoginModel loginModel = new();
 
-    private bool isCaptchaSolved = false; // пройдена ли капча
-    private bool isError = true; // флаг ошибки (для цвета текста)
-    private string message = ""; // текст сообщения
-    private Captcha? captchaComponent; // ссылка на компонент капчи, чтобы можно было ее сбросить
+    private bool isCaptchaSolved = false; //пройдена ли капча
+    private bool isError = true; //флаг ошибки (для цвета текста)
+    private string message = ""; //текст сообщения
+    private Captcha? captchaComponent; //ссылка на компонент капчи, чтобы можно было ее сбросить
 
-    // Вызывается, когда пользователь собрал пазл
+    //Вызывается, когда пользователь собрал пазл
     private void OnCaptchaSolved()
     {
         isCaptchaSolved = true;
@@ -64,12 +64,12 @@
         StateHasChanged();
     }
 
-    // Вызывается при нажатии на кнопку войти"
+    //Вызывается при нажатии на кнопку войти
     private async Task HandleLogin()
     {
         message = null;
 
-        // Проверяем, пройдена ли капча
+        //Проверяем, пройдена ли капча
         if (!isCaptchaSolved)
         {
             message = "Пройдите капчу!";
@@ -78,21 +78,21 @@
         }
         var (user, error) = await Auth.AuthenticateAsync(loginModel.Login, loginModel.Password);
 
-        if (user == null) // если неверные данные
+        if (user == null) //если неверные данные
         {
             message = error!;
             isError = true;
 
-            // Сбрасываем пазл при ошибке
+            //Сбрасываем пазл при ошибке
             isCaptchaSolved = false;
             captchaComponent?.ResetPuzzle();
             return;
         }
         isError = false;
-        Nav.NavigateTo("/"); // переходим на главную (она перекинет по роли)
+        Nav.NavigateTo("/"); //переходим на главную (она перекинет по роли)
     }
 
-    // Класс модели с правилами проверки полей
+    //Класс модели с правилами проверки полей
     public class LoginModel
     {
         [Required(ErrorMessage = "Введите логин")]

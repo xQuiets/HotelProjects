@@ -45,19 +45,17 @@
 </div>
 
 @code {
-    private List<Booking>? bookings;
-
-    protected override async Task OnInitializedAsync()
+    private List<Booking>? bookings; //список для хранения броней
+    protected override async Task OnInitializedAsync() //срабатывает при загрузке страницы
     {
-        using var context = await ContextFactory.CreateDbContextAsync();
+        using var context = await ContextFactory.CreateDbContextAsync(); //открываем базу данных
         bookings = await context.Bookings
-            .Include(b => b.Organization)
-            .ToListAsync();
+            .Include(b => b.Organization) //подтягиваем название организации
+            .ToListAsync(); //получаем список
     }
-
-    private async Task Logout()
+    private async Task Logout() //метод для выхода
     {
-        await Auth.LogoutAsync();
-        Nav.NavigateTo("/login");
+        await Auth.LogoutAsync(); //удаляем сессию
+        Nav.NavigateTo("/login"); //переходим на страницу входа
     }
 }
