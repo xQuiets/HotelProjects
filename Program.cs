@@ -1,16 +1,19 @@
 using HotelProject.Data;
 using Microsoft.EntityFrameworkCore;
 using HotelProject.Components;
+using HotelProject.Services;
+using Plk.Blazor.DragDrop;
 
 var builder = WebApplication.CreateBuilder(args);
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContextFactory<AppDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
-
+builder.Services.AddScoped<AuthService>();//использует метод scoped, чтобы каждый раз создавать новый экземпл€р
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+builder.Services.AddBlazorDragDrop();
 
 var app = builder.Build();
 

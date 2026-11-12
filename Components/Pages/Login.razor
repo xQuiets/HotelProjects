@@ -1,0 +1,90 @@
+﻿@page "/login"
+@rendermode InteractiveServer
+@using System.ComponentModel.DataAnnotations
+@using HotelProject.Services
+@using HotelProject.Components.Shared
+@inject AuthService Auth
+@inject NavigationManager Nav
+
+<!--по центру экрана-->
+<div style="display: flex; justify-content: center; margin-top: 50px;">
+
+    <!--вертикальный блок-->
+    <div style="text-align: center; display: flex; flex-direction: column;">
+        <h3>Авторизация</h3>
+        @if (!string.IsNullOrEmpty(message))
+        {
+            <div style="color:@(isError ? "red" : "green"); margin-bottom: 15px; font-weight: bold;">
+                @message
+            </div>
+        }
+        <!--Форма-->
+        <EditForm Model="loginModel" OnValidSubmit="HandleLogin" FormName="LoginForm">
+            <DataAnnotationsValidator />
+            <p style="text-align: left;">
+                Логин:<br />
+                <InputText @bind-Value="loginModel.Login" style="width: 100%; padding: 5px;" />
+                <ValidationMessage For="() => loginModel.Login" style="color: red; font-size: 0.8em;" />
+            </p>
+            <p style="text-align: left;">
+                Пароль:<br />
+                <InputText @bind-Value="loginModel.Password" type="password" style="width: 100%; padding: 5px;" />
+                <ValidationMessage For="() => loginModel.Password" style="color: red; font-size: 0.8em;" />
+            </p>
+            <button type="submit" style="width: 100%; padding: 8px;background: #555; color: white; border: none;cursor: pointer;">
+                Войти
+            </button>
+        </EditForm>
+
+        <!--Капча под кнопкой-->
+        <div style="margin-top: 20px;">
+            <Captcha @ref="captchaComponent" OnSolved="OnCaptchaSolved" />
+        </div>
+    </div>
+</div>
+
+@code {
+    private LoginModel loginModel = new();
+
+    private bool isCaptchaSolved = false;
+    private bool isError = true;
+    private string message = "";
+    private Captcha? captchaComponent;
+
+    private void OnCaptchaSolved()
+    {
+        isCaptchaSolved = true;
+        message = "Капча пройдена!";
+        isError = false;
+        StateHasChanged();
+    }
+    private async Task HandleLogin()
+    {
+        message = null;
+        if (!isCaptchaSolved)
+        {
+            message = "Пройдите капчу!";
+            isError = true;
+            return;
+        }
+        var (user, error) = await Auth.AuthenticateAsync(loginModel.Login, loginModel.Password);
+        if (user == null)
+        {
+            message = error!;
+            isError = true;
+            // Сбрасываем пазл при ошибке
+            isCaptchaSolved = false;
+            captchaComponent?.ResetPuzzle();
+            return;
+        }
+        isError = false;
+        Nav.NavigateTo("/");
+    }
+    public class LoginModel
+    {
+        [Required(ErrorMessage = "Введите логин")]
+        public string Login { get; set; } = "";
+        [Required(ErrorMessage = "Введите пароль")]
+        public string Password { get; set; } = "";
+    }
+}
